@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HAPPY | Branding</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="brand.css">
+    <link rel="stylesheet" href="brand-responsive.css">
+</head>
+
+<body>
+
+<header class="hero">
+    <div class="hero-content">
+        <h1 class="logo-text">
+            <span class="h red">H</span>
+            <span class="a yellow">A</span>
+            <span class="p brown">P</span>
+            <span class="p brown">P</span>
+            <span class="y red">Y</span>
+        </h1>
+
+        <p class="tagline">La experiencia que convierte clientes en familia.</p>
+
+        <a href="#" class="btn">Ver Menú</a>
+    </div>
+</header>
+
+<!-- SELECTOR NUEVO -->
+<div class="selector-categorias">
+    <select id="categoriaSelect">
+        <option value="">Elegí una categoría</option>
+    </select>
+</div>
+
+<!-- CONTENEDOR DEL MENÚ -->
+<div id="menu" class="menu-contenedor"></div>
+
+<!-- Scripts -->
+<script src="brand.js"></script>
+
+<script>
+document.querySelector(".btn").addEventListener("click", (e) => {
+    e.preventDefault();
+    document.querySelector("#menu").scrollIntoView({
+        behavior: "smooth"
+    });
+});
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

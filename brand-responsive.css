@@ -1,0 +1,73 @@
+/* ==========================================================
+   RESPONSIVE – ADAPTACIÓN GENERAL PARA MOBILE
+   ========================================================== */
+
+@media (max-width: 1024px) {
+
+    /* SELECTOR AJUSTADO A MOBILE */
+    .selector-categorias {
+        width: calc(100% - 2cm); /* 1 cm por lado */
+        margin: 20px auto;
+        padding: 0;
+    }
+
+    #categoriaSelect {
+        font-size: 1rem;
+        padding: 14px 14px;
+    }
+
+    /* CARDS */
+    .grid {
+        gap: 16px;
+    }
+
+    .card img {
+        height: 150px;
+    }
+}
+
+
+/* ===========================
+   CELU MEDIO (480px)
+   =========================== */
+
+@media (max-width: 480px) {
+
+    .selector-categorias {
+        width: calc(100% - 2cm); /* sigue siendo exacto */
+    }
+
+    #categoriaSelect {
+        font-size: 0.95rem;
+        padding: 12px;
+    }
+
+    .card img {
+        height: 135px;
+    }
+}
+
+
+/* ===========================
+   ULTRA MINI (360px)
+   =========================== */
+
+@media (max-width: 360px) {
+
+    .selector-categorias {
+        width: calc(100% - 2cm);
+    }
+
+    #categoriaSelect {
+        font-size: 0.9rem;
+        padding: 12px;
+    }
+
+    .card img {
+        height: 120px;
+    }
+}
+
+/* ==========================================================
+   FIN RESPONSIVE CORREGIDO
+   ========================================================== */

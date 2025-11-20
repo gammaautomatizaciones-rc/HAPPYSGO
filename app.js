@@ -4,14 +4,16 @@ const IMG_PATH = "img/";
 let items = [];
 let filtrados = [];
 
+// Asegúrate de incluir Papa Parse en tu HTML
+// <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
+
 /**
  * 🍕 CARGAR CSV EN TIEMPO REAL
  * Obtiene el CSV, lo parsea y llama a renderMenu.
  */
 async function cargarMenu() {
     try {
-        // La nueva URL de publicación directa de Google Sheets ya es muy estable.
-        // Agregamos un timestamp para forzar la no-cache, aunque la directiva 'no-store' también ayuda.
+        // La URL del CSV tiene un timestamp para evitar la caché de los datos (lo cual ya hacías).
         const res = await fetch(SHEET_URL + "&t=" + Date.now(), { cache: "no-store" });
         
         if (!res.ok) {
@@ -19,12 +21,11 @@ async function cargarMenu() {
         }
 
         const csv = await res.text();
-
-        // Papa Parse necesita ser incluido en tu HTML (ej: <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>)
+        
         const parsed = Papa.parse(csv, { header: true });
 
         items = parsed.data
-            .filter(row => (row.categoria || "").trim() && (row.nombre || "").trim()) // Filtrar filas vacías o sin nombre/categoría
+            .filter(row => (row.categoria || "").trim() && (row.nombre || "").trim())
             .map(row => ({
                 categoria: (row.categoria || "").trim(),
                 nombre: (row.nombre || "").trim(),
@@ -42,7 +43,7 @@ async function cargarMenu() {
         console.error("❌ Fallo al obtener o parsear el menú:", error);
         const cont = document.getElementById("menu");
         if (cont) {
-            cont.innerHTML = "<p class='error-mensaje'>No se pudo cargar el menú. Por favor, revisa la consola para más detalles o verifica la publicación del CSV.</p>";
+            cont.innerHTML = "<p class='error-mensaje'>No se pudo cargar el menú. Por favor, verifica la conexión o la publicación del CSV.</p>";
         }
     }
 }
@@ -53,41 +54,27 @@ async function cargarMenu() {
  */
 function renderMenu() {
     const cont = document.getElementById("menu");
-    if (!cont) return; // Asegurarse de que el contenedor exista
+    if (!cont) return;
+    
+    // Usamos temporalmente una copia del select para reasignar el listener
+    const select = document.getElementById("categoriaSelect");
+    
+    // Si el select existe, lo clonamos antes de vaciar el contenedor principal para preservar el listener
+    if (select) {
+        select.removeEventListener("change", handleCategoryChange);
+        select.innerHTML = "";
+    }
     
     cont.innerHTML = "";
 
-    // Obtener categorías únicas y filtrar cadenas vacías
     const categorias = [...new Set(filtrados.map(i => i.categoria).filter(c => c))];
 
-    const select = document.getElementById("categoriaSelect");
     if (select) {
         select.innerHTML = "<option value=''>Elegí una categoría</option>" +
             categorias.map(c => `<option value="${c}">${c}</option>`).join("");
             
-        // Limpiar listeners antiguos antes de añadir uno nuevo (si fuera necesario en re-renders)
-        select.replaceWith(select.cloneNode(true));
-        const newSelect = document.getElementById("categoriaSelect");
-
-        newSelect.addEventListener("change", () => {
-            const cat = newSelect.value;
-            
-            document.querySelectorAll(".cat-section").forEach(sec => sec.style.display = "none");
-
-            if (!cat) return;
-
-            const cleanID = cat
-                .toLowerCase()
-                .replace(/\s+/g, "-")
-                .replace(/[^\w\-]/g, "");
-
-            const section = document.getElementById("sec-" + cleanID);
-            if (section) {
-                section.style.display = "block";
-            }
-        });
+        select.addEventListener("change", handleCategoryChange);
     }
-
 
     categorias.forEach(cat => {
         const cleanID = cat
@@ -95,7 +82,6 @@ function renderMenu() {
             .replace(/\s+/g, "-")
             .replace(/[^\w\-]/g, "");
 
-        // Creación de la sección de categoría (Mejor usar createElement/appendChild, pero mantengo innerHTML por simplicidad)
         cont.innerHTML += `
             <div class='cat-section' id='sec-${cleanID}' style='display:none;'>
                 <h2 class='categoria-titulo'>${cat}</h2>
@@ -103,7 +89,6 @@ function renderMenu() {
             </div>
         `;
 
-        // Obtener el grid del elemento recién añadido
         const grid = document.querySelector(`#sec-${cleanID} .grid`);
 
         if (grid) {
@@ -114,7 +99,6 @@ function renderMenu() {
                         ? `<img src="${IMG_PATH}${i.imagen}" alt="${i.nombre}" onerror="this.style.display='none'">`
                         : "";
                     
-                    // Formatear precio de manera segura
                     const priceValue = Number(i.precio || 0);
                     const formattedPrice = isNaN(priceValue) ? 'Consultar' : priceValue.toLocaleString("es-AR", { minimumFractionDigits: 0 });
 
@@ -132,11 +116,23 @@ function renderMenu() {
         }
     });
 
-    // Mostrar todo por defecto si no hay select (o si quieres que se muestre todo al cargar)
-    if (cont.children.length > 0 && (!select || !select.value)) {
-        // En este caso, el comportamiento original es ocultar todo y esperar la selección.
-        // Si quieres que la primera categoría se muestre al cargar, descomenta:
-        // document.querySelector(".cat-section").style.display = "block";
+    // Función para manejar el evento de cambio del selector
+    function handleCategoryChange() {
+        const cat = select.value;
+        
+        document.querySelectorAll(".cat-section").forEach(sec => sec.style.display = "none");
+
+        if (!cat) return;
+        
+        const cleanID = cat
+            .toLowerCase()
+            .replace(/\s+/g, "-")
+            .replace(/[^\w\-]/g, "");
+
+        const section = document.getElementById("sec-" + cleanID);
+        if (section) {
+            section.style.display = "block";
+        }
     }
 }
 

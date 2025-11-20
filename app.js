@@ -1,13 +1,14 @@
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVD2iCdH4_pynOefXZ6gg_5UklL1C2q676plGTLxjmDQ18O6Pf_lo1NoJwrBaltEbVRxiLc2Wk1Qc3/pub?gid=0&single=true&output=csv";
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVD2iCdH4_pynOefXZ6gg_5UklL1C2q676plGTLxjmDQ18O6Pf_lo1NoJwrBaltEbVRxiLc2Wk1Qc3/pub?gid=0&single=true&output=csv
+";
 
 const IMG_PATH = "img/";
 
 let items = [];
 let filtrados = [];
 
-// CARGAR CSV (REAL TIME)
+// CARGAR CSV EN TIEMPO REAL
 async function cargarMenu() {
-const res = await fetch(SHEET_URL + "?t=" + Date.now(), { cache: "no-store" });
+const res = await fetch(SHEET_URL + "&t=" + Date.now(), { cache: "no-store" });
 const csv = await res.text();
 
 const parsed = Papa.parse(csv, { header: true });
@@ -34,12 +35,12 @@ cont.innerHTML = "";
 
 const categorias = [...new Set(filtrados.map(i => i.categoria))];
 
-// Rellenar el SELECT
+// SELECT
 const select = document.getElementById("categoriaSelect");
 select.innerHTML = `<option value="">Elegí una categoría</option>` +
     categorias.map(c => `<option value="${c}">${c}</option>`).join("");
 
-// Crear secciones por categoría
+// SECCIONES POR CATEGORÍA
 categorias.forEach(cat => {
 
     const cleanID = cat
@@ -76,7 +77,7 @@ categorias.forEach(cat => {
         });
 });
 
-// Cambio de categoría
+// EVENTO DEL SELECT
 select.addEventListener("change", () => {
     const cat = select.value;
 

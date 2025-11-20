@@ -1,11 +1,14 @@
 const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVD2iCdH4_pynOefXZ6gg_5UklL1C2q676plGTLxjmDQ18O6Pf_lo1NoJwrBaltEbVRxiLc2Wk1Qc3/pub?gid=0&single=true&output=csv";
 const IMG_PATH = "img/";
 
+// Define el intervalo de actualización en milisegundos (ej: 30000ms = 30 segundos)
+const INTERVALO_ACTUALIZACION = 30000; 
+
 let items = [];
 let filtrados = [];
+let selectHandlerAttached = false; // Bandera para asegurar que el listener del select se adjunte solo una vez
 
-// Asegúrate de incluir Papa Parse en tu HTML
-// <script src="https://unpkg.com/papaparse@5.3.0/papaparse.min.js"></script>
+// ... (El resto de tu código de Papa Parse y la inclusión de la librería se mantiene igual)
 
 /**
  * 🍕 CARGAR CSV EN TIEMPO REAL
@@ -13,7 +16,8 @@ let filtrados = [];
  */
 async function cargarMenu() {
     try {
-        // La URL del CSV tiene un timestamp para evitar la caché de los datos (lo cual ya hacías).
+        console.log("Cargando menú desde Google Sheets...");
+        // Usamos un timestamp para forzar la no-cache de los datos.
         const res = await fetch(SHEET_URL + "&t=" + Date.now(), { cache: "no-store" });
         
         if (!res.ok) {
@@ -21,7 +25,6 @@ async function cargarMenu() {
         }
 
         const csv = await res.text();
-        
         const parsed = Papa.parse(csv, { header: true });
 
         items = parsed.data
@@ -43,38 +46,43 @@ async function cargarMenu() {
         console.error("❌ Fallo al obtener o parsear el menú:", error);
         const cont = document.getElementById("menu");
         if (cont) {
-            cont.innerHTML = "<p class='error-mensaje'>No se pudo cargar el menú. Por favor, verifica la conexión o la publicación del CSV.</p>";
+            cont.innerHTML = "<p class='error-mensaje'>No se pudo cargar el menú. Por favor, verifica la conexión.</p>";
         }
     }
 }
 
 /**
- * 🍔 RENDERIZAR EL MENÚ
- * Dibuja las categorías y los items en la página, y configura el selector.
+ * 🍔 FUNCIÓN DE RENDERIZADO
  */
 function renderMenu() {
     const cont = document.getElementById("menu");
     if (!cont) return;
     
-    // Usamos temporalmente una copia del select para reasignar el listener
+    // Guardamos el valor seleccionado antes de borrar el HTML
     const select = document.getElementById("categoriaSelect");
-    
-    // Si el select existe, lo clonamos antes de vaciar el contenedor principal para preservar el listener
-    if (select) {
-        select.removeEventListener("change", handleCategoryChange);
-        select.innerHTML = "";
-    }
-    
+    const selectedValue = select ? select.value : '';
+
     cont.innerHTML = "";
 
     const categorias = [...new Set(filtrados.map(i => i.categoria).filter(c => c))];
 
+    // Re-renderizar las opciones del select
     if (select) {
         select.innerHTML = "<option value=''>Elegí una categoría</option>" +
             categorias.map(c => `<option value="${c}">${c}</option>`).join("");
             
-        select.addEventListener("change", handleCategoryChange);
+        // Restaurar el valor seleccionado
+        select.value = selectedValue;
+
+        // Adjuntar el listener SÓLO una vez
+        if (!selectHandlerAttached) {
+            select.addEventListener("change", handleCategoryChange);
+            selectHandlerAttached = true;
+        }
     }
+
+    // ... (El resto de la lógica de renderizado de las tarjetas sigue aquí) ...
+    // Nota: Por brevedad, he omitido el bucle de renderizado, pero debe ser el que ya tienes.
 
     categorias.forEach(cat => {
         const cleanID = cat
@@ -82,16 +90,20 @@ function renderMenu() {
             .replace(/\s+/g, "-")
             .replace(/[^\w\-]/g, "");
 
-        cont.innerHTML += `
+        // 1. Crear la estructura de la sección
+        const sectionHTML = `
             <div class='cat-section' id='sec-${cleanID}' style='display:none;'>
                 <h2 class='categoria-titulo'>${cat}</h2>
                 <div class='grid'></div>
             </div>
         `;
+        // Usar insertAdjacentHTML para evitar re-renderizar todo el DOM del grid cada vez
+        cont.insertAdjacentHTML('beforeend', sectionHTML);
 
         const grid = document.querySelector(`#sec-${cleanID} .grid`);
 
         if (grid) {
+            // 2. Llenar el grid
             filtrados
                 .filter(i => i.categoria === cat)
                 .forEach(i => {
@@ -114,9 +126,14 @@ function renderMenu() {
                     `;
                 });
         }
+        
+        // Mostrar la categoría que estaba seleccionada antes de la actualización
+        if (select && cleanID === selectedValue.toLowerCase().replace(/\s+/g, "-").replace(/[^\w\-]/g, "")) {
+            document.getElementById("sec-" + cleanID).style.display = "block";
+        }
     });
-
-    // Función para manejar el evento de cambio del selector
+    
+    // Función de manejo del evento de cambio del selector (separada para el listener único)
     function handleCategoryChange() {
         const cat = select.value;
         
@@ -136,5 +153,13 @@ function renderMenu() {
     }
 }
 
-// Inicializar la carga del menú al cargar el script
+
+// ------------------------------------------------------------------
+// 🚀 INICIALIZACIÓN Y ACTUALIZACIÓN AUTOMÁTICA
+// ------------------------------------------------------------------
+
+// 1. Carga inicial
 cargarMenu();
+
+// 2. Configurar la recarga periódica
+setInterval(cargarMenu, INTERVALO_ACTUALIZACION);

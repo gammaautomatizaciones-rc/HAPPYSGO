@@ -1,6 +1,4 @@
-const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSVD2iCdH4_pynOefXZ6gg_5UklL1C2q676plGTLxjmDQ18O6Pf_lo1NoJwrBaltEbVRxiLc2Wk1Qc3/pub?gid=0&single=true&output=csv
-";
-
+const SHEET_URL = "https://docs.google.com/spreadsheets/d/1vSVD2iCdH4_pynOefXZ6gg_5UklL1C2q676plGTLxjmDQ18O6Pf_lo1NoJwrBaltEbVRxiLc2Wk1Qc3/gviz/tq?tqx=out:csv";
 const IMG_PATH = "img/";
 
 let items = [];
@@ -35,49 +33,43 @@ cont.innerHTML = "";
 
 const categorias = [...new Set(filtrados.map(i => i.categoria))];
 
-// SELECT
 const select = document.getElementById("categoriaSelect");
-select.innerHTML = `<option value="">Elegí una categoría</option>` +
-    categorias.map(c => `<option value="${c}">${c}</option>`).join("");
+select.innerHTML = "<option value=''>Elegí una categoría</option>" +
+    categorias.map(c => "<option value='" + c + "'>" + c + "</option>").join("");
 
-// SECCIONES POR CATEGORÍA
 categorias.forEach(cat => {
-
     const cleanID = cat
         .toLowerCase()
         .replace(/\s+/g, "-")
         .replace(/[^\w\-]/g, "");
 
-    cont.innerHTML += `
-        <div class="cat-section" id="sec-${cleanID}" style="display:none;">
-            <h2 class="categoria-titulo">${cat}</h2>
-            <div class="grid"></div>
-        </div>
-    `;
+    cont.innerHTML +=
+        "<div class='cat-section' id='sec-" + cleanID + "' style='display:none;'>" +
+            "<h2 class='categoria-titulo'>" + cat + "</h2>" +
+            "<div class='grid'></div>" +
+        "</div>";
 
-    const grid = document.querySelector(`#sec-${cleanID} .grid`);
+    const grid = document.querySelector("#sec-" + cleanID + " .grid");
 
     filtrados
         .filter(i => i.categoria === cat)
         .forEach(i => {
             const imgHTML = i.imagen
-                ? `<img src="${IMG_PATH + i.imagen}" onerror="this.style.display='none'">`
+                ? "<img src='" + IMG_PATH + i.imagen + "' onerror=\"this.style.display='none'\">"
                 : "";
 
-            grid.innerHTML += `
-                <div class="card">
-                    ${imgHTML}
-                    <div class="texto">
-                        <h3>${i.nombre}</h3>
-                        <p>${i.descripcion}</p>
-                        <div class="precio">$${Number(i.precio || 0).toLocaleString("es-AR")}</div>
-                    </div>
-                </div>
-            `;
+            grid.innerHTML +=
+                "<div class='card'>" +
+                    imgHTML +
+                    "<div class='texto'>" +
+                        "<h3>" + i.nombre + "</h3>" +
+                        "<p>" + i.descripcion + "</p>" +
+                        "<div class='precio'>$" + Number(i.precio || 0).toLocaleString("es-AR") + "</div>" +
+                    "</div>" +
+                "</div>";
         });
 });
 
-// EVENTO DEL SELECT
 select.addEventListener("change", () => {
     const cat = select.value;
 
@@ -90,11 +82,10 @@ select.addEventListener("change", () => {
         .replace(/\s+/g, "-")
         .replace(/[^\w\-]/g, "");
 
-    document.getElementById(`sec-${cleanID}`).style.display = "block";
+    document.getElementById("sec-" + cleanID).style.display = "block";
 });
 
 
 }
 
-// Inicio
 cargarMenu();
